@@ -473,6 +473,26 @@ class TicketSystem(Component):
             return intertrac
         try:
             link, params, fragment = formatter.split_link(target)
+            #NEW vvvvv
+            # Short "#<ticketId>:<commentId>"
+            if ':' in link:
+                arr = link.split(':')
+                if len(arr)==2:
+                    tnum,cnum = arr
+                    ticket = formatter.resource('ticket', tnum)
+                    href = "%s#comment:%s" % (formatter.href.ticket(tnum),
+                                              cnum)
+                    title = _("Comment %(cnum)s for Ticket #%(id)s", cnum=cnum,
+                              id=tnum)
+                    from trac.ticket.model import Ticket
+                    if Ticket.id_is_valid(tnum) and \
+                            'TICKET_VIEW' in formatter.perm(ticket):
+                        for status, in self.env.db_query(
+                                "SELECT status FROM ticket WHERE id=%s", (tnum,)):
+                            return tag.a(label, href=href, title=title,
+                                         class_=status)
+                    return tag.a(label, href=href, title=title)
+            #NEW ^^^^^
             r = Ranges(link)
             if len(r) == 1:
                 num = r.a
