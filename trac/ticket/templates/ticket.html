@@ -134,9 +134,27 @@
                   has_property_editor = not version and version != 0 and not cnum_edit
                                         and (can_append or can_modify or can_edit or can_create)">
 
+      <!-- ORG vvvvv
       <div class="trac-topnav" py:if="(ticket.exists or preview_mode) and has_property_editor">
         <a href="#modify" title="Go to the ticket editor">Modify</a> &darr;
       </div>
+      ORG ^^^^^ -->
+      <!-- NEW vvvvv -->
+      <div class="trac-topnav">
+        <span py:if="ticket.exists"
+          py:with="exomine_search_url = 'https://secure.exocad.com/exomine/projects/support/search?utf8=%E2%9C%93&amp;scope=all'
+                                      + '&amp;all_words=&amp;all_words=1&amp;titles_only=&amp;issues=1&amp;wiki_pages=1'
+                                      + '&amp;contacts=1&amp;commit=Submit&amp;q=exocad%2Fticket%2F{0}'.format(ticket.id)">
+          <a href="${exomine_search_url}" target="_blank" class="ext-link" title="List all exomine tickets related to this bug ticket">
+            <span class="icon">​&#8203;</span>Search exomine
+          </a>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+        <span py:if="(ticket.exists or preview_mode) and has_property_editor">
+          <a href="#modify" title="Go to the ticket editor">Modify</a> &darr;
+        </span>        
+      </div>
+      <!-- NEW ^^^^^ -->
       <h1 py:if="not ticket.exists">
         Create New Ticket <span py:if="preview_mode and ticket.type" class="status">(${ticket.type})</span>
       </h1>
