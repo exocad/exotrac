@@ -420,6 +420,23 @@ class ReportModule(Component):
                 'report_href': report_href,
                 }
 
+        #NEW vvvvv
+        res = None
+        with self.env.db_query as db:
+            res = self.execute_report(req, db, id, sql, args)
+
+        if len(res) == 2:
+             e, sql = res
+             data['message'] = \
+                 tag_("Report execution failed: %(error)s %(sql)s",
+                      error=tag.pre(exception_to_unicode(e)),
+                      sql=tag(tag.hr(),
+                              tag.pre(sql, style="white-space: pre")))
+             return 'report_view.html', data, None
+
+        all_results = res[1]
+        #NEW ^^^^^
+
         res = None
         with self.env.db_query as db:
             res = self.execute_paginated_report(req, db, id, sql, args, limit,
@@ -595,6 +612,23 @@ class ReportModule(Component):
         data.update({'header_groups': header_groups,
                      'row_groups': row_groups,
                      'numrows': numrows})
+
+        #NEW vvvvv
+        data['all_ticket_ids'] = None
+        if len(all_results) > 0:
+            #all_ticket_ids = [ '#{0}'.format(row['id']) for id,row in enumerate(all_results) ]
+            #all_ticket_ids = all_ticket_ids.join(" + ")
+            all_ticket_ids = ""
+            for row_idx, result in enumerate(all_results):
+                col_idx = 0
+                for header_group in header_groups:
+                    for header in header_group:
+                        if header['col'] in ('report', 'ticket', 'id', '_id'):
+                            all_ticket_ids += " + #{0}".format(cell_value(result[col_idx]))
+                        col_idx += 1
+            if len(all_ticket_ids) > 0:
+                data['all_ticket_ids'] = all_ticket_ids[3:]
+        #NEW ^^^^^
 
         if format == 'rss':
             data['email_map'] = chrome.get_email_map()
