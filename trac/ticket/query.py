@@ -1167,6 +1167,27 @@ class QueryModule(Component):
         Chrome(self.env).add_jquery_ui(req)
         add_script(req, 'common/js/query.js')
 
+        #NEW vvvvv
+        data['all_ticket_ids'] = None
+        if 'REPORT_VIEW' in req.perm and \
+               self.env.is_component_enabled(ReportModule):
+            #full_query = Query(query.env, query.id, query.constraints, ['id'],
+            #         query.order, query.desc, query.group, query.groupdesc, 
+            #         verbose=0, rows=None, page=1, max=0, query.format)
+            #all_tickets = full_query.execute(req)
+            org_max, org_offset, org_has_more_pages = ( query.max, query.offset, query.has_more_pages ) 
+            query.max, query.offset, query.has_more_pages = ( 0, 0, False ) 
+            all_tickets = query.execute(req)
+            query.max, query.offset, query.has_more_pages = ( org_max, org_offset, org_has_more_pages )
+             
+            if len(all_tickets) > 0:
+                all_ticket_ids = ""
+                for t in all_tickets:
+                    all_ticket_ids += " + #{0}".format(t['id'])
+                if len(all_ticket_ids) > 0:
+                    data['all_ticket_ids'] = all_ticket_ids[3:]
+        #NEW ^^^^^
+
         return 'query.html', data, None
 
     def export_csv(self, req, query, sep=',', mimetype='text/plain'):

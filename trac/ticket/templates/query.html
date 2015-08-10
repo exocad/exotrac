@@ -38,9 +38,70 @@
         $("#columns").toggleClass("collapsed");
       });
     </script>
+    <!-- NEW vvvvv -->
+    <script type="text/javascript" py:if="all_ticket_ids">
+    /*
+      // Sadfully, this isn't as easy as stated, highly dependent on browser 
+      function copy_ticket_ids() 
+      {
+        var copyEvent = new ClipboardEvent('copy', { dataType: 'text/plain', data: "${all_ticket_ids}" } );
+        copyEvent.preventDefault();
+        document.dispatchEvent(copyEvent);
+      }
+    */
+      function select_all_on_click(elem)
+      {
+        //elem.select(); => Won't work with all browsers
+        elem.setSelectionRange(0, elem.value.length);
+      }
+      function show_ticket_ids() 
+      {
+        $('#show_ticket_ids_a').replaceWith('<span id="show_ticket_ids_a">Show ticket ids</span>');
+        $('#hide_ticket_ids_a').replaceWith('<a id="hide_ticket_ids_a" href="#" title="Hide ticket ids to be used with TSVN search" onclick="hide_ticket_ids();">Hide ticket ids</a>');
+        $('#ticket_sel_div').show();
+        
+        var elem = $("#ticket_sel_data");
+        elem.height("auto");
+        elem.height(elem.prop("scrollHeight")+"px");
+      }
+      function hide_ticket_ids() 
+      {
+        $('#hide_ticket_ids_a').replaceWith('<span id="hide_ticket_ids_a">Hide ticket ids</span>');
+        $('#show_ticket_ids_a').replaceWith('<a id="show_ticket_ids_a" href="#" title="Show ticket ids to be used with TSVN search" onclick="show_ticket_ids();">Show ticket ids</a>');
+        $('#ticket_sel_div').hide();
+      }
+    </script>
+    <!-- NEW ^^^^^ -->
   </head>
 
   <body>
+    <!-- NEW vvvvv -->
+    <div py:if="all_ticket_ids" id="ticket_sel" class="nav">
+      <h2>Ticket selection for TSVN</h2>
+      <ul>
+        <!--
+        <li class="first">
+          <a id="copy_ticket_ids_a" href="#" title="Copy ticket ids to clipboard to be used with TSVN search" onclick="copy_ticket_ids();">Copy ticket ids</a>
+        </li>
+        -->
+        <li class="first">
+          <a id="show_ticket_ids_a" href="#" title="Show ticket ids to be used with TSVN search" onclick="show_ticket_ids();">Show ticket ids</a>
+        </li>
+        <li class="last">
+          <span id="hide_ticket_ids_a">Hide ticket ids</span>
+        </li>
+      </ul>
+    </div>
+
+    <div py:if="all_ticket_ids" id="ticket_sel_div" class="trac-content" style="display:none; margin-bottom:2em;">
+      <div>
+        <!-- <span id="ticket_sel_data">${all_ticket_ids}</span> -->
+        <!-- <input type="text" value="${all_ticket_ids}" readonly="readonly" onclick="select_all_on_click(this);" style="width:99%; font-size:9pt;" /> -->
+        <textarea id="ticket_sel_data" style="width:100%; height:auto; font-size:9pt; resize:vertical;" onclick="select_all_on_click(this);">${all_ticket_ids}</textarea>
+      </div>
+    </div>
+    <!-- NEW ^^^^^ -->
+
     <div id="content" class="query">
       <h1>$title <span class="numrows">(${ngettext('%(num)s match', '%(num)s matches', query.num_items)})</span></h1>
 
