@@ -453,9 +453,17 @@ class TicketSystem(Component):
     # IWikiSyntaxProvider methods
 
     def get_link_resolvers(self):
+        ''' OLD vvvvv
         return [('bug', self._format_link),
                 ('ticket', self._format_link),
                 ('comment', self._format_comment_link)]
+        OLD ^^^^^ '''
+        #NEW vvvvv
+        return [('bug', self._format_link),
+                ('ticket', self._format_link),
+                ('comment', self._format_comment_link),
+                ('exomine', self._format_exomine_link)]
+        #NEW ^^^^^
 
     def get_wiki_syntax(self):
         yield (
@@ -572,6 +580,37 @@ class TicketSystem(Component):
                 class_ = 'missing ticket'
             return tag.a(label, class_=class_, href=href, title=title)
         return label
+
+    #NEW vvvvv
+    def _format_exomine_link(self, formatter, ns, target, label):
+        # Wiki support for short exomine links:
+        #    exomine:3234    -> ​https://secure.exocad.com/exomine/issues/3234
+        #    exomine:3234:12 -> ​https://secure.exocad.com/exomine/issues/3234#note-12
+        def get_url(ticket, comment=None):
+            base_exomine_url = ""
+            href = "https://secure.exocad.com/exomine/issues/{0}".format(ticket)
+            if comment is not None:
+                href += "#note-{0}".format(comment)
+            return href
+
+        try:
+            if ':' in target:
+                arr = target.split(':')
+                if len(arr) == 2:
+                    href = get_url(arr[0], arr[1])
+                    title = _("Comment %(cnum)s for exomine ticket #%(id)s", 
+                              cnum=arr[1], id=arr[0])
+                    return tag.a(tag.span(class_="icon") + label, href=href, 
+                                 title=title, class_="ext-link")
+            else:
+                href = get_url(target)
+                title = _("exomine ticket #%(id)s", id=target)
+                return tag.a(tag.span(class_="icon") + label, href=href, 
+                             title=title, class_="ext-link")
+        except ValueError:
+            pass
+        return tag.a(label, class_='unable to parse')#Todo: Add this class
+    #NEW ^^^^^
 
     # IResourceManager methods
 
