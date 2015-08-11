@@ -466,6 +466,7 @@ class TicketSystem(Component):
         #NEW ^^^^^
 
     def get_wiki_syntax(self):
+        ''' OLD vvvvv
         yield (
             # matches #... but not &#... (HTML entity)
             r"!?(?<!&)#"
@@ -473,6 +474,20 @@ class TicketSystem(Component):
             r"(?P<it_ticket>%s)%s" % (WikiParser.INTERTRAC_SCHEME,
                                       Ranges.RE_STR),
             lambda x, y, z: self._format_link(x, 'ticket', y[1:], y, z))
+        OLD ^^^^^ '''
+        #NEW vvvvv
+        yield (
+            # matches #...#comment:... but not &#... (HTML entity)
+            r"!?(?<!&)#"
+            # optional intertrac shorthand #T... + digits
+            # + additional intertrac shorthand #<tId>#comment:<cId>
+            r"\d+(#comment:\d+)?",
+            lambda x, y, z: self._format_link(x, 'ticket', y[1:], y, z))
+        #DEBUG: ticket.get_wiki_syntax: 
+        #  x=<trac.wiki.formatter.Formatter object at 0x7f74ac8aec90>, 
+        #  y=#2#comment:1, 
+        #  z=<_sre.SRE_Match object at 0x7f74b0420120>
+        #NEW ^^^^^
 
     def _format_link(self, formatter, ns, target, label, fullmatch=None):
         intertrac = formatter.shorthand_intertrac_helper(ns, target, label,
@@ -482,24 +497,35 @@ class TicketSystem(Component):
         try:
             link, params, fragment = formatter.split_link(target)
             #NEW vvvvv
-            # Short "#<ticketId>:<commentId>"
+            # Short "#<ticketId>:<commentId>" 
+            # or    "#<ticketId>#comment:<commentId>" (last part of trac url)
             if ':' in link:
+                def get_tag(ticketId, commentId):
+                    href = "%s#%s" % (formatter.href.ticket(ticketId), 
+                                      commentId)
+                    title = _("Comment %(cnum)s for Ticket #%(id)s", 
+                              cnum=commentId, id=ticketId)
+                    from trac.ticket.model import Ticket
+                    ticket = formatter.resource('ticket', ticketId)
+                    if Ticket.id_is_valid(ticketId) and \
+                            'TICKET_VIEW' in formatter.perm(ticket):
+                        for status, in self.env.db_query(
+                                "SELECT status FROM ticket WHERE id=%s", 
+                                (ticketId,)):
+                            return tag.a(label, href=href, title=title, 
+                                         class_=status)
+                    return tag.a(label, href=href, title=title)
+
+                if '#' in link:
+                    arr = link.split('#')
+                    if len(arr)==2:
+                        tnum,cnum = arr
+                        if cnum.startswith("comment:"):
+                            return get_tag(tnum, cnum[8:])
                 arr = link.split(':')
                 if len(arr)==2:
                     tnum,cnum = arr
-                    ticket = formatter.resource('ticket', tnum)
-                    href = "%s#comment:%s" % (formatter.href.ticket(tnum),
-                                              cnum)
-                    title = _("Comment %(cnum)s for Ticket #%(id)s", cnum=cnum,
-                              id=tnum)
-                    from trac.ticket.model import Ticket
-                    if Ticket.id_is_valid(tnum) and \
-                            'TICKET_VIEW' in formatter.perm(ticket):
-                        for status, in self.env.db_query(
-                                "SELECT status FROM ticket WHERE id=%s", (tnum,)):
-                            return tag.a(label, href=href, title=title,
-                                         class_=status)
-                    return tag.a(label, href=href, title=title)
+                    return get_tag(tnum, cnum)
             #NEW ^^^^^
             r = Ranges(link)
             if len(r) == 1:
