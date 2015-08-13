@@ -1,0 +1,4 @@
+repo: af42429a9c52861788a9658c07fd560eebc23ea7
+node: 46e3b20788edb6efd57d73988436e33bbad9f400
+branch: default
+tag: subcomponents-1.2.0
