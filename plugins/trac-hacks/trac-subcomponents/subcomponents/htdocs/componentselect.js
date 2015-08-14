@@ -49,6 +49,18 @@ function getLeafsForLevel(level, prefix, forceEmptyLeafs)
 	return retVal;
 }
 
+//NEW vvvvv
+/*
+    Adjust size of elements after dropdown visibility changed
+*/
+function updateUIAfterComponentChange()
+{
+    var content_width = jQuery("#properties").outerWidth();
+    var margin = Math.round((window.innerWidth - content_width) / 2);
+    jQuery("#content.ticket").width(content_width).css("margin-left", margin).css("margin-right", margin);
+}
+//NEW ^^^^^
+
 /*
 	Event handler for when the user has changed the selected component
  */
@@ -70,6 +82,10 @@ function selectedComponentChanged(e) {
 			});
 		// Store the path of the previous leafs and end
 		jQuery(this).parent().find("input[type=hidden]").val(prefix);
+        //NEW vvvvv
+		// Update UI
+		updateUIAfterComponentChange();
+        //NEW ^^^^^
 		return;
 	}
 	
@@ -82,6 +98,10 @@ function selectedComponentChanged(e) {
 			prefix += jQuery(this).val(); 
 		});
 		jQuery(this).parent().find("input[type=hidden]").val(prefix);
+        //NEW vvvvv
+        // Update UI
+        updateUIAfterComponentChange();
+        //NEW ^^^^^
 		return;
 	}
 	
@@ -129,6 +149,11 @@ function selectedComponentChanged(e) {
 	// Update the current selected value. The prefix string has the complete
 	// path of the current selection
 	jQuery(this).parent().find("input[type=hidden]").val(prefix);
+
+    //NEW vvvvv
+    // Update UI
+    updateUIAfterComponentChange();
+    //NEW ^^^^^
 }
 
 

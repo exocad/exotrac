@@ -84,7 +84,7 @@
  clear: both;
  border-top: 1px solid #dd9;
  border-collapse: collapse;
- table-layout: fixed;
+ /*table-layout: fixed;*/
  width: 100%;
 }
 #ticket table.properties > tbody > tr { border-bottom: 1px dotted #eed }
@@ -104,6 +104,7 @@
 #ticket table.properties > tbody > tr > td { width: 30% }
 #ticket table.properties > tbody > tr > td p:first-child { margin-top: 0 }
 #ticket table.properties > tbody > tr > td p:last-child { margin-bottom: 0 }
+#ticket table.properties td[headers='h_component'] { word-break: keep-all; }
 #ticket div.description h3 {
  border-bottom: 1px solid #dd9;
  color: #663;
@@ -201,11 +202,16 @@ form .field fieldset { margin-left: 1px; margin-right: 1px }
 label[for=comment] { float: right }
 
 #propertyform { margin-bottom: 2em; }
-#properties { white-space: nowrap; line-height: 160%; padding: .5em }
+#properties { 
+ white-space: nowrap; 
+ line-height: 160%; 
+ padding: .5em
+ text-align: center; 
+}
 #properties table {
  border-spacing: 0;
  padding: 0 .5em;
- table-layout: fixed;
+ /*table-layout: fixed;*/
  width: 100%;
 }
 #properties table th,
@@ -215,6 +221,10 @@ label[for=comment] { float: right }
  vertical-align: top;
  white-space: normal;
  width: 17%;
+}
+#properties table th.col1,
+#properties table th.col2 { 
+ vertical-align: middle; 
 }
 #properties table th.col2 { border-left: 1px dotted #d7d7d7 }
 #properties table td,

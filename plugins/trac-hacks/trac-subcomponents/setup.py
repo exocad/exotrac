@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name = 'TracSubcomponents',
-    version = '1.2.0',
+    version = '1.2.0 exocad edition',
     packages = ['subcomponents'],
     package_data = { 'subcomponents': ['htdocs/*.js'] },
 
@@ -35,7 +35,7 @@ setup(
         'Programming Language :: Python',
     ],
     
-    install_requires = ['Trac>=1.0dev',],
+    install_requires = ['Trac>=1.0.8dev',],
 
     entry_points = {
         'trac.plugins': [

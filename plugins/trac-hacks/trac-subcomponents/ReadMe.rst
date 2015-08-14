@@ -39,3 +39,11 @@ standard component admin page. If you enter the following components:
 
 Then the user interface will show the ``Frontend`` and ``Backend`` as a
 subcomponent of the ``Web`` component.  
+
+Important notes
+---------------
+
+This is a fork of original v1.2.0 which can be found at 
+    https://trac-hacks.org/wiki/SubcomponentsPlugin
+
+Main reason for doing so is to make it compatible with Trac-1.0.8
