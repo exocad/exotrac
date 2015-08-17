@@ -480,8 +480,8 @@ class TicketSystem(Component):
             # matches #...#comment:... but not &#... (HTML entity)
             r"!?(?<!&)#"
             # optional intertrac shorthand #T... + digits
-            # + additional intertrac shorthand #<tId>#comment:<cId>
-            r"\d+(#comment:\d+)?",
+            # + additional shorthand #<tId>:<cId> and #<tId>#comment:<cId>
+            r"\d+((#comment)?:\d+)?",
             lambda x, y, z: self._format_link(x, 'ticket', y[1:], y, z))
         #DEBUG: ticket.get_wiki_syntax: 
         #  x=<trac.wiki.formatter.Formatter object at 0x7f74ac8aec90>, 
@@ -501,7 +501,7 @@ class TicketSystem(Component):
             # or    "#<ticketId>#comment:<commentId>" (last part of trac url)
             if ':' in link:
                 def get_tag(ticketId, commentId):
-                    href = "%s#%s" % (formatter.href.ticket(ticketId), 
+                    href = "%s#comment:%s" % (formatter.href.ticket(ticketId), 
                                       commentId)
                     title = _("Comment %(cnum)s for Ticket #%(id)s", 
                               cnum=commentId, id=ticketId)
