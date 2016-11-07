@@ -501,20 +501,22 @@ class TicketSystem(Component):
             # or    "#<ticketId>#comment:<commentId>" (last part of trac url)
             if ':' in link:
                 def get_tag(ticketId, commentId):
-                    href = "%s#comment:%s" % (formatter.href.ticket(ticketId), 
-                                      commentId)
-                    title = _("Comment %(cnum)s for Ticket #%(id)s", 
-                              cnum=commentId, id=ticketId)
                     from trac.ticket.model import Ticket
-                    ticket = formatter.resource('ticket', ticketId)
                     if Ticket.id_is_valid(ticketId) and \
-                            'TICKET_VIEW' in formatter.perm(ticket):
-                        for status, in self.env.db_query(
-                                "SELECT status FROM ticket WHERE id=%s", 
-                                (ticketId,)):
-                            return tag.a(label, href=href, title=title, 
-                                         class_=status)
-                    return tag.a(label, href=href, title=title)
+                            Ticket.commentid_is_valid(commentId):
+                        href = "%s#comment:%s" % (formatter.href.ticket(ticketId), 
+                                          commentId)
+                        title = _("Comment %(cnum)s for Ticket #%(id)s", 
+                                  cnum=commentId, id=ticketId)
+                        ticket = formatter.resource('ticket', ticketId)
+                        if 'TICKET_VIEW' in formatter.perm(ticket):
+                            for status, in self.env.db_query(
+                                    "SELECT status FROM ticket WHERE id=%s", 
+                                    (ticketId,)):
+                                return tag.a(label, href=href, title=title, 
+                                             class_=status)
+                        return tag.a(label, href=href, title=title)
+                    return tag.a(label, class_='missing ticket')
 
                 if '#' in link:
                     arr = link.split('#')
@@ -685,6 +687,9 @@ class TicketSystem(Component):
         try:
             id_ = int(resource.id)
         except (TypeError, ValueError):
+            return False
+        from trac.ticket.model import Ticket
+        if not Ticket.id_is_valid(_id):
             return False
         if self.env.db_query("SELECT id FROM ticket WHERE id=%s", (id_,)):
             if resource.version is None:

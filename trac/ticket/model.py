@@ -53,7 +53,17 @@ class Ticket(object):
 
     @staticmethod
     def id_is_valid(num):
-        return 0 < int(num) <= 1L << 31
+        #return 0 < int(num) <= 1L << 31
+        # Id _MUST_ be smaller 0x80000000 or db might complain 
+        # with 'out of range for type integer' if using postgreSQL
+        # (column type 'INTEGER' is 4-byte signed only, see
+        # https://www.postgresql.org/docs/9.1/static/datatype-numeric.html )
+        return 0 < int(num) < 1L << 31
+
+    @staticmethod
+    def commentid_is_valid(num):
+        # Same as 'id_is_valid', but separated to keep tests clean
+        return 0 < int(num) < 1L << 31
 
     # 0.11 compatibility
     time_created = property(lambda self: self.values.get('time'))
