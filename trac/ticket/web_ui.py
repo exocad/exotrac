@@ -195,6 +195,7 @@ class TicketModule(Component):
     def get_search_filters(self, req):
         if 'TICKET_VIEW' in req.perm:
             yield ('ticket', _("Tickets"))
+            yield ('tickets_i_am_involved', _("Tickets I'm involved only"))
 
     def get_search_results(self, req, terms, filters):
         if not 'ticket' in filters:
@@ -206,9 +207,38 @@ class TicketModule(Component):
                                            db.cast('id', 'text')], terms)
             sql2, args2 = search_to_sql(db, ['newvalue'], terms)
             sql3, args3 = search_to_sql(db, ['value'], terms)
-            ticketsystem = TicketSystem(self.env)
-            for summary, desc, author, type, tid, ts, status, resolution in \
-                    db("""SELECT summary, description, reporter, type, id,
+            if 'tickets_i_am_involved' in filters:
+                own_sql, own_args = search_to_sql(db, ['reporter', 'owner', 
+                                                       'cc'], [req.authname])
+                own_sql2, own_args2 = search_to_sql(db, ['author'], 
+                                                    [req.authname])
+                rows = db("""SELECT summary, description, reporter, type, id,
+                                 time, status, resolution
+                          FROM ticket
+                          WHERE id IN (
+                              SELECT id FROM ticket WHERE %s AND %s
+                            UNION
+                              SELECT ticket FROM ticket_change
+                              WHERE %s AND field='comment' AND %s
+                            UNION
+                              SELECT ticket FROM ticket_custom 
+                              WHERE %s AND (
+                                EXISTS (
+                                  SELECT 1 FROM ticket 
+                                  WHERE ticket.id=ticket_custom.ticket AND %s
+                                )
+                                OR EXISTS (
+                                  SELECT 1 FROM ticket_change  
+                                  WHERE ticket_change.ticket=ticket_custom.ticket AND %s
+                                )
+                              ) 
+                          )
+                          """ % (own_sql, sql, own_sql2, sql2, sql3, 
+                                 own_sql, own_sql2),
+                          own_args + args + own_args2 + args2 + args3 
+                          + own_args + own_args2)
+            else:
+                rows = db("""SELECT summary, description, reporter, type, id,
                                  time, status, resolution
                           FROM ticket
                           WHERE id IN (
@@ -220,7 +250,10 @@ class TicketModule(Component):
                               SELECT ticket FROM ticket_custom WHERE %s
                           )
                           """ % (sql, sql2, sql3),
-                          args + args2 + args3):
+                          args + args2 + args3)
+            ticketsystem = TicketSystem(self.env)
+            for summary, desc, author, type, tid, ts, status, resolution in \
+                    rows:
                 t = ticket_realm(id=tid)
                 if 'TICKET_VIEW' in req.perm(t):
                     yield (req.href.ticket(tid),
