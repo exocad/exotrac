@@ -689,7 +689,7 @@ class TicketSystem(Component):
         except (TypeError, ValueError):
             return False
         from trac.ticket.model import Ticket
-        if not Ticket.id_is_valid(_id):
+        if not Ticket.id_is_valid(id_):
             return False
         if self.env.db_query("SELECT id FROM ticket WHERE id=%s", (id_,)):
             if resource.version is None:
