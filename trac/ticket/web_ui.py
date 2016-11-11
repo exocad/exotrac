@@ -33,7 +33,7 @@ from trac.resource import (
     Resource, ResourceNotFound, get_resource_url, render_resource_link,
     get_resource_shortname
 )
-from trac.search import ISearchSource, search_to_sql, shorten_result
+from trac.search import ISearchSource2, search_to_sql, shorten_result
 from trac.ticket.api import TicketSystem, ITicketManipulator
 from trac.ticket.model import Milestone, Ticket, group_milestones
 from trac.ticket.notification import TicketNotifyEmail
@@ -67,7 +67,7 @@ class InvalidTicket(TracError):
 class TicketModule(Component):
 
     implements(IContentConverter, INavigationContributor, IRequestHandler,
-               ISearchSource, ITemplateProvider, ITimelineEventProvider)
+               ISearchSource2, ITemplateProvider, ITimelineEventProvider)
 
     ticket_manipulators = ExtensionPoint(ITicketManipulator)
 
@@ -190,13 +190,14 @@ class TicketModule(Component):
     def get_templates_dirs(self):
         return [pkg_resources.resource_filename('trac.ticket', 'templates')]
 
-    # ISearchSource methods
+    # ISearchSource2 methods
 
     def get_search_filters(self, req):
         if 'TICKET_VIEW' in req.perm:
-            yield ('ticket', _("Tickets"))
-            yield ('tickets_i_am_involved', _("Tickets I'm involved only"))
-
+            yield {'name':'ticket', 'label':_("Tickets")}
+            yield {'name':'tickets_i_am_involved', 'parent':'ticket',
+                   'label':_("Search only in tickets where I was involved")}
+    
     def get_search_results(self, req, terms, filters):
         if not 'ticket' in filters:
             return
