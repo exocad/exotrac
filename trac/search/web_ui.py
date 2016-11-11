@@ -22,7 +22,7 @@ from genshi.builder import tag
 from trac.config import IntOption, ListOption
 from trac.core import *
 from trac.perm import IPermissionRequestor
-from trac.search.api import ISearchSource
+from trac.search.api import ISearchSource, ISearchSource2
 from trac.util.datefmt import format_datetime, user_time
 from trac.util.html import find_element
 from trac.util.presentation import Paginator
@@ -42,6 +42,7 @@ class SearchModule(Component):
                ITemplateProvider, IWikiSyntaxProvider)
 
     search_sources = ExtensionPoint(ISearchSource)
+    search_sources2 = ExtensionPoint(ISearchSource2)
 
     RESULTS_PER_PAGE = 10
 
@@ -89,9 +90,24 @@ class SearchModule(Component):
 
         query = req.args.get('q')
         available_filters = []
+        # Add old style first, upgrading to new dictionary
         for source in self.search_sources:
-            available_filters.extend(source.get_search_filters(req) or [])
-        available_filters.sort(key=lambda f: f[1].lower())
+            search_filters = source.get_search_filters(req) or []
+            for f in search_filters:
+                # Convert from old tuple style to dictionary
+                f = { 'name':f[0], 'label':f[1], 'order':f[1].lower(),
+                      'active': f[2] if len(f) > 2 else True }
+                available_filters.append(f)
+        # Add new-style filters afterwards
+        for source in self.search_sources2:
+            search_filters = source.get_search_filters(req) or []
+            for f in search_filters:
+                # Add keys missing
+                if not 'order' in f: f['order'] = f['label'].lower()
+                if not 'active' in f: f['active'] = True
+                available_filters.append(f)
+        # Finally, sort using new order field
+        available_filters.sort(key=lambda f: f['order'])
 
         filters = self._get_selected_filters(req, available_filters)
         data = self._prepare_data(req, query, available_filters, filters)
@@ -141,17 +157,31 @@ class SearchModule(Component):
     def _get_selected_filters(self, req, available_filters):
         """Return selected filters or the default filters if none was selected.
         """
-        filters = [f[0] for f in available_filters if f[0] in req.args]
+        filters = [f['name'] for f in available_filters 
+                   if f['name'] in req.args]
         if not filters:
-            filters = [f[0] for f in available_filters
-                       if f[0] not in self.default_disabled_filters and
-                       (len(f) < 3 or len(f) > 2 and f[2])]
+            filters = [f['name'] for f in available_filters
+                       if f['name'] not in self.default_disabled_filters and
+                       f['active'] ]
         return filters
 
     def _prepare_data(self, req, query, available_filters, filters):
-        return {'filters': [{'name': f[0], 'label': f[1],
-                             'active': f[0] in filters}
-                            for f in available_filters],
+        lookup = {f['name']:f 
+                  for f in available_filters if not 'parent' in f}
+        mainfilters = []
+        subfilters = {}
+        for f in available_filters:
+            f['active'] = f['name'] in filters
+            if not 'parent' in f:
+                mainfilters.append(f)
+            else:
+                parent = f['parent']
+                if not parent in subfilters: 
+                    subfilters[parent] = {'label':lookup[parent]['label'], 
+                                         'childs':[]}
+                subfilters[parent]['childs'].append(f)
+        return {'filters': mainfilters,
+                'subfilters': subfilters, 
                 'query': query, 'quickjump': None, 'results': []}
 
     def _check_quickjump(self, req, kwd):
@@ -209,6 +239,9 @@ class SearchModule(Component):
     def _do_search(self, req, terms, filters):
         results = []
         for source in self.search_sources:
+            results.extend(source.get_search_results(req, terms, filters)
+                           or [])
+        for source in self.search_sources2:
             results.extend(source.get_search_results(req, terms, filters)
                            or [])
         return sorted(results, key=lambda x: x[2], reverse=True)

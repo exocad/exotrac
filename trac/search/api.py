@@ -41,6 +41,27 @@ class ISearchSource(Interface):
         """
 
 
+class ISearchSource2(ISearchSource):
+    """Extension point interface for adding search sources to the search
+    system.
+    Extended version of `ISearchSource` to allow for returning a dictionary
+    instead of tuple(s). See `get_search_filters` for usage.
+    """
+
+    def get_search_filters(req):
+        """Return a list of filters that this search source supports.
+
+        Nearly the same as 'ISearchSource.get_search_filters' but returns 
+        dictionaries instead of tuples. This allows for adding more filter-
+        defining parameters. As of now, keys following are supported:
+        - order: Sorting will use this instead of label
+                 (defaults to 'label'.lower() if omitted).
+        - parent: To allow for grouping filter options (using parent's 'name').
+                  This will add extra fieldset's and some JS code to allow for 
+                  disabling child's based on parent selection.
+        """
+
+
 def search_to_sql(db, columns, terms):
     """Convert a search query into an SQL WHERE clause and corresponding
     parameters.

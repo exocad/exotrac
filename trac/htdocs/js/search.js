@@ -86,27 +86,3 @@
   });
 
 })(jQuery);
-
-
-/*
- * Newly added code fragment to be used with new search filter: 
- *  "Tickets I'm involved only"
- *
- * Not the best solution to put this code into here, but not sure on how to
- * add a .js to ticket components (tried adding "htdocs" subfolder and letting
- * "get_htdocs_dirs" return the path, but ended up with HTTP-500 while doing so)
- */
-jQuery(document).ready(function(){
-    jQuery("#ticket").change(function(){
-        if (jQuery("#ticket").prop("checked"))
-        {
-            jQuery("#tickets_i_am_involved").removeAttr("disabled");
-            jQuery("label[for='tickets_i_am_involved']").removeClass("disabled");
-        }
-        else
-        {
-            jQuery("#tickets_i_am_involved").attr("disabled", "disabled");
-            jQuery("label[for='tickets_i_am_involved']").addClass("disabled");
-        }
-    });
-});

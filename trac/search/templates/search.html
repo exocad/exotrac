@@ -43,7 +43,36 @@
                    checked="${filter.active or None}" />
             <label for="$filter.name">$filter.label</label>
           </py:for>
-       </p>
+        </p>
+
+        <py:if test="subfilters">
+          <py:for each="parent in subfilters">
+            <fieldset>
+              <legend>Further options related to ${subfilters[parent].label}</legend>
+              <py:for each="child in subfilters[parent].childs">
+                <input type="checkbox" id="$child.name" name="$child.name" parent="$parent"
+                       checked="${child.active or None}" />
+                <label for="$child.name" parent="$parent">$child.label</label>
+              </py:for>
+            </fieldset>
+          </py:for>
+          <script type="text/javascript">
+            jQuery(document).ready(function(){
+            <py:for each="parent in subfilters">
+              jQuery("#$parent").change(function(){
+                if (jQuery("#$parent").prop("checked")){
+                  jQuery("input[parent='$parent']").removeAttr("disabled");
+                  jQuery("label[parent='$parent']").removeClass("disabled");
+                }
+                else{
+                  jQuery("input[parent='$parent']").attr("disabled", "disabled");
+                  jQuery("label[parent='$parent']").addClass("disabled");
+                }
+              });
+            </py:for>
+            });
+          </script>
+        </py:if>
       </form>
 
       <py:if test="results or quickjump"><hr />
