@@ -35,7 +35,7 @@ from trac.util.datefmt import format_datetime, format_time, from_utimestamp
 from trac.util.presentation import Paginator
 from trac.util.text import exception_to_unicode, to_unicode, quote_query_string
 from trac.util.translation import _, tag_
-from trac.web.api import IRequestHandler, RequestDone
+from trac.web.api import IRequestHandler, RequestDone, IContextAwareQuickSearch
 from trac.web.chrome import (INavigationContributor, Chrome,
                              add_ctxtnav, add_link, add_notice, add_script,
                              add_stylesheet, add_warning, auth_link,
@@ -112,7 +112,7 @@ def split_sql(sql, clause_re, skel=None):
 class ReportModule(Component):
 
     implements(INavigationContributor, IPermissionRequestor, IRequestHandler,
-               IWikiSyntaxProvider)
+               IWikiSyntaxProvider, IContextAwareQuickSearch)
 
     items_per_page = IntOption('report', 'items_per_page', 100,
         """Number of tickets displayed per page in ticket reports,
@@ -984,3 +984,8 @@ class ReportModule(Component):
             else:
                 return tag.a(label, class_='forbidden report',
                              title=_("no permission to view report"))
+
+    # IContextAwareQuickSearch
+    
+    def get_context_for_search(self, req):
+        return 'ticket' if 'TICKET_VIEW' in req.perm else None

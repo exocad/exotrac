@@ -61,7 +61,9 @@ from trac.util.datefmt import (
     get_day_names_jquery_ui, get_timezone_list_jquery_ui,
     get_first_week_day_jquery_ui)
 from trac.util.translation import _, get_available_locales
-from trac.web.api import IRequestHandler, ITemplateStreamFilter, HTTPNotFound
+from trac.web.api import IRequestHandler, ITemplateStreamFilter, \
+                         HTTPNotFound, IContextAwareQuickSearch
+
 from trac.web.href import Href
 from trac.wiki import IWikiSyntaxProvider
 from trac.wiki.formatter import format_to, format_to_html, format_to_oneliner
@@ -399,6 +401,7 @@ class Chrome(Component):
     navigation_contributors = ExtensionPoint(INavigationContributor)
     template_providers = ExtensionPoint(ITemplateProvider)
     stream_filters = ExtensionPoint(ITemplateStreamFilter)
+    context_searchables = ExtensionPoint(IContextAwareQuickSearch)
 
     shared_templates_dir = PathOption('inherit', 'templates_dir', '',
         """Path to the //shared templates directory//.
@@ -835,6 +838,13 @@ class Chrome(Component):
                 })
 
         chrome['nav'] = nav
+
+        # Search context hint
+        search_context = None
+        for searchable in self.context_searchables:
+            if searchable is handler:
+                search_context = searchable.get_context_for_search(req)
+        chrome['search_context'] = search_context
 
         # Default theme file
         chrome['theme'] = 'theme.html'

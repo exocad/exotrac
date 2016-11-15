@@ -157,8 +157,9 @@ class SearchModule(Component):
     def _get_selected_filters(self, req, available_filters):
         """Return selected filters or the default filters if none was selected.
         """
+        search_context = req.args['c'].lower() if 'c' in req.args else None
         filters = [f['name'] for f in available_filters 
-                   if f['name'] in req.args]
+                   if f['name'] in req.args or f['name'] == search_context]
         if not filters:
             filters = [f['name'] for f in available_filters
                        if f['name'] not in self.default_disabled_filters and

@@ -126,6 +126,15 @@ class ITemplateStreamFilter(Interface):
         """
 
 
+class IContextAwareQuickSearch(Interface):
+    """Allows handlers to utilize quick search box on upper right.
+    """
+    
+    def get_context_for_search(req):
+        """Return name of search filter so search has a context to work with.
+        """ 
+    
+
 HTTP_STATUS = dict([(code, reason.title()) for code, (reason, description)
                     in BaseHTTPRequestHandler.responses.items()])
 

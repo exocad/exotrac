@@ -49,7 +49,8 @@ from trac.util.text import (
 from trac.util.presentation import separated
 from trac.util.translation import _, tag_, tagn_, N_, ngettext
 from trac.versioncontrol.diff import get_diff_options, diff_blocks
-from trac.web.api import IRequestHandler, arg_list_to_args, parse_arg_list
+from trac.web.api import IRequestHandler, arg_list_to_args, parse_arg_list, \
+                         IContextAwareQuickSearch
 from trac.web.chrome import (
     Chrome, INavigationContributor, ITemplateProvider,
     add_ctxtnav, add_link, add_notice, add_script, add_script_data,
@@ -67,7 +68,8 @@ class InvalidTicket(TracError):
 class TicketModule(Component):
 
     implements(IContentConverter, INavigationContributor, IRequestHandler,
-               ISearchSource2, ITemplateProvider, ITimelineEventProvider)
+               IContextAwareQuickSearch, ISearchSource2, ITemplateProvider, 
+               ITimelineEventProvider)
 
     ticket_manipulators = ExtensionPoint(ITicketManipulator)
 
@@ -190,6 +192,11 @@ class TicketModule(Component):
     def get_templates_dirs(self):
         return [pkg_resources.resource_filename('trac.ticket', 'templates')]
 
+    # IContextAwareQuickSearch
+    
+    def get_context_for_search(self, req):
+        return 'ticket' if 'TICKET_VIEW' in req.perm else None
+        
     # ISearchSource2 methods
 
     def get_search_filters(self, req):

@@ -34,9 +34,18 @@
       </div>
       <form id="search" action="${href.search()}" method="get">
         <div py:if="not defined('trac_error_rendering') and 'SEARCH_VIEW' in perm">
+        <py:choose test="">
+         <py:when test="chrome.search_context">
           <label for="proj-search">Search:</label>
           <input type="text" id="proj-search" name="q" size="18" accesskey="f" value="" />
+          <input type="hidden" name="c" value="${chrome.search_context}" />
           <input type="submit" value="${_('Search')}" />
+         </py:when>
+         <py:otherwise>
+          <!-- !Add a bogus submit button to keep same height as when using quick search -->  
+          <input type="submit" style="visibility:hidden;" value="${_('Search')}" onclick="stopPropagation()" />
+         </py:otherwise>
+        </py:choose>
         </div>
       </form>
       ${navigation('metanav')}

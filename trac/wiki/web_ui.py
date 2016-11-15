@@ -36,7 +36,7 @@ from trac.util.datefmt import from_utimestamp, to_utimestamp
 from trac.util.text import shorten_line
 from trac.util.translation import _, tag_
 from trac.versioncontrol.diff import get_diff_options, diff_blocks
-from trac.web.api import IRequestHandler
+from trac.web.api import IRequestHandler, IContextAwareQuickSearch
 from trac.web.chrome import (Chrome, INavigationContributor,
                              ITemplateProvider, add_ctxtnav, add_link,
                              add_notice, add_script, add_stylesheet,
@@ -57,7 +57,7 @@ class WikiModule(Component):
 
     implements(IContentConverter, INavigationContributor,
                IPermissionRequestor, IRequestHandler, ITimelineEventProvider,
-               ISearchSource, ITemplateProvider)
+               IContextAwareQuickSearch, ISearchSource, ITemplateProvider)
 
     page_manipulators = ExtensionPoint(IWikiPageManipulator)
 
@@ -764,6 +764,11 @@ class WikiModule(Component):
                 markup = tag(markup,
                              " (", tag.a(_("diff"), href=diff_href), ")")
             return markup
+
+    # IContextAwareQuickSearch
+    
+    def get_context_for_search(self, req):
+        return 'wiki' if 'WIKI_VIEW' in req.perm else None
 
     # ISearchSource methods
 
