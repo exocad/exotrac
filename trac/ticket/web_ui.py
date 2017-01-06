@@ -228,7 +228,7 @@ class TicketModule(Component):
                                  time, status, resolution
                           FROM ticket
                           WHERE id IN (
-                              SELECT id FROM ticket WHERE %s AND %s%s
+                              SELECT id FROM ticket WHERE %s AND %s
                             UNION
                               SELECT ticket FROM ticket_change
                               WHERE %s AND field='comment' AND %s
@@ -244,9 +244,9 @@ class TicketModule(Component):
                                   WHERE ticket_change.ticket=ticket_custom.ticket AND %s
                                 )
                               ) 
-                          )
-                          """ % (own_sql, sql, own_sql3, own_sql2, sql2, sql3, 
-                                 own_sql, own_sql2),
+                          )%s
+                          """ % (own_sql, sql, own_sql2, sql2, sql3, 
+                                 own_sql, own_sql2, own_sql3),
                           own_args + args + own_args2 + args2 + args3 
                           + own_args + own_args2)
             else:
@@ -254,14 +254,14 @@ class TicketModule(Component):
                                  time, status, resolution
                           FROM ticket
                           WHERE id IN (
-                              SELECT id FROM ticket WHERE %s%s
+                              SELECT id FROM ticket WHERE %s
                             UNION
                               SELECT ticket FROM ticket_change
                               WHERE field='comment' AND %s
                             UNION
                               SELECT ticket FROM ticket_custom WHERE %s
-                          )
-                          """ % (sql, own_sql3, sql2, sql3),
+                          )%s
+                          """ % (sql, sql2, sql3, own_sql3),
                           args + args2 + args3)
             ticketsystem = TicketSystem(self.env)
             for summary, desc, author, type, tid, ts, status, resolution in \
