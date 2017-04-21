@@ -1787,6 +1787,15 @@ class TicketModule(Component):
             if f['name'] == field:
                 field_info = f
                 break
+            
+        #vv New custom renderer option
+        custom_renderer = field_info['custom_renderer'].lower() \
+            if 'custom_renderer' in field_info else None
+        if custom_renderer == 'ticket_link':
+            render_elt = lambda x: self._try_render_ticket_link(req, ticket, 
+                                                                field, x)
+        #^^ New custom renderer option
+
         type_ = field_info.get('type')
         if type_ == 'checkbox':
             rendered = _("set") if new == '1' else _("unset")
@@ -1833,7 +1842,78 @@ class TicketModule(Component):
             elif old and new:
                 rendered = tag_("changed from %(old)s to %(new)s",
                                 old=tag.em(old), new=tag.em(new))
+
+        #vv New custom renderer option
+        if not rendered and custom_renderer:
+            if custom_renderer == 'ticket_link':
+                render_elt = lambda x: self._try_render_ticket_link(req, ticket, 
+                                                                    field, x)
+            else:
+                render_elt = lambda x: x
+                
+            if old and not new:
+                rendered = tag_("%(value)s deleted", 
+                                value=tag.em(render_elt(old)))
+            elif new and not old:
+                rendered = tag_("set to %(value)s", 
+                                value=tag.em(render_elt(new)))
+            elif old and new:
+                rendered = tag_("changed from %(old)s to %(new)s",
+                                old=tag.em(render_elt(old)), 
+                                new=tag.em(render_elt(new)))
+        #^^ New custom renderer option
+            
         return rendered
+
+    #vv New custom renderer option
+    def _try_render_ticket_link(self, req, ticket, field, text):
+        try:
+            #if ',' in text:
+            if re.search(r'[;,\s]', text):
+                _list = re.split(r'[;,\s]+', text)
+                _comma_sep = re.search(r'[;,]', text)
+                _rendered = [] 
+                for _element in _list:
+                    if len(_rendered) > 0:
+                        _rendered.append(', ' if _comma_sep else ' ')
+                    _rendered.append(self._try_render_ticket_link(req, ticket, 
+                                                                  field,
+                                                                  _element))
+                return tag.span(*_rendered)
+                
+            _id = int( text[1:] if text[0] == '#' else text )
+            _ticket = ticket.resource(_id)
+            from trac.ticket.model import Ticket
+            if Ticket.id_is_valid(_id) and \
+                'TICKET_VIEW' in req.perm(_ticket):
+                # TODO: attempt to retrieve ticket view directly,
+                #       something like: t = Ticket.view(num)
+                for _type, _summary, _status, _resolution in \
+                        self.env.db_query("""
+                        SELECT type, summary, status, resolution
+                        FROM ticket WHERE id=%s
+                        """, (str(_id),)):
+
+                    _summary = shorten_line(_summary)
+                    if _type:
+                        _summary = _type + ': ' + _summary
+                    if _status:
+                        if _status == 'closed' and _resolution:
+                            _status += ': ' + _resolution
+                        _title = "%s (%s)" % (_summary, _status)
+                    else:
+                        _title = _summary
+                    _href = req.href.ticket(_id)
+                    _label = text if text[0] == '#' else '#' + text
+                    return tag.a(_label, title=_title, href=_href,
+                                 class_='%s ticket' % _status)                
+        except:
+            #import traceback
+            #self.log.debug("_render_property_diff: Rendering failed:\n" + \
+            #               traceback.format_exc())
+            pass
+        return text
+    #^^ New custom renderer option
 
     def grouped_changelog_entries(self, ticket, db=None, when=None):
         """Iterate on changelog entries, consolidating related changes

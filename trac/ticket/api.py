@@ -173,6 +173,10 @@ class TicketSystem(Component):
     change_listeners = ExtensionPoint(ITicketChangeListener)
     milestone_change_listeners = ExtensionPoint(IMilestoneChangeListener)
 
+    #vv New custom renderer option
+    ticket_section = ConfigSection('ticket', """Main ticket section.""")
+    #^^ New custom renderer option
+    
     ticket_custom_section = ConfigSection('ticket-custom',
         """In this section, you can define additional fields for tickets. See
         TracTicketsCustomFields for more details.""")
@@ -344,6 +348,14 @@ class TicketSystem(Component):
         fields.append({'name': 'changetime', 'type': 'time',
                        'label': N_('Modified')})
 
+        #vv New custom renderer option
+        for field in fields:
+            fieldname = field['name'] + '.custom_renderer'
+            custom_renderer = self.ticket_section.get(fieldname, None)
+            if custom_renderer:
+                field['custom_renderer'] = custom_renderer
+        #^^ New custom renderer option
+
         for field in self.get_custom_fields():
             if field['name'] in [f['name'] for f in fields]:
                 self.log.warning('Duplicate field name "%s" (ignoring)',
@@ -394,6 +406,13 @@ class TicketSystem(Component):
                 field['format'] = config.get(name + '.format', 'plain')
                 field['width'] = config.getint(name + '.cols')
                 field['height'] = config.getint(name + '.rows')
+            
+            #vv New custom renderer option
+            custom_renderer = config.get(name + '.custom_renderer', None)
+            if custom_renderer:
+                field['custom_renderer'] = custom_renderer
+            #^^ New custom renderer option
+            
             fields.append(field)
 
         fields.sort(lambda x, y: cmp((x['order'], x['name']),
