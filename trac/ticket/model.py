@@ -69,6 +69,8 @@ class Ticket(object):
     time_created = property(lambda self: self.values.get('time'))
     time_changed = property(lambda self: self.values.get('changetime'))
 
+    field_defaults = None
+
     def __init__(self, env, tkt_id=None, db=None, version=None):
         """
         :since 1.0: the `db` parameter is no longer needed and will be removed
@@ -101,14 +103,18 @@ class Ticket(object):
     exists = property(lambda self: self.id is not None)
 
     def _init_defaults(self):
+        if not self.field_defaults:
+            self.field_defaults = FieldDefaultsFile(self.env)
         for field in self.fields:
             default = None
             if field['name'] in self.protected_fields:
                 # Ignore for new - only change through workflow
                 pass
             elif not field.get('custom'):
-                default = self.env.config.get('ticket',
-                                              'default_' + field['name'])
+                default = self.field_defaults.get_default(field['name'])
+                if not default:
+                    default = self.env.config.get('ticket',
+                                                  'default_' + field['name'])
             else:
                 default = field.get('value')
                 options = field.get('options')
@@ -1278,3 +1284,69 @@ class Version(object):
         def version_order(v):
             return (v.time or utcmax, embedded_numbers(v.name))
         return sorted(versions, key=version_order, reverse=True)
+
+
+import xml.sax
+import os.path
+
+class FieldDefaultsFile:
+    """New XML-based field default file:
+    
+    <?xml version="1.0" encoding="utf-8"?>
+    <!-- Field defaults for new tickets -->
+    <defaults>
+        <description><![CDATA['''Issue description'''
+
+'''Expected result'''
+
+'''Actual result'''
+
+'''Steps to recreate'''
+]]></description>
+    </defaults>
+
+    """
+     
+    def __init__(self, env):    
+        self._handler = FieldDefaultsFile.Handler()
+        filename = os.path.join(env.path, 'conf', 'field_defaults.xml')
+        if os.path.exists(filename):
+            parser = xml.sax.make_parser()
+            # No support for namespaces needed
+            parser.setFeature(xml.sax.handler.feature_namespaces, 0)
+            parser.setContentHandler(self._handler)
+            parser.parse(filename)
+
+    def get_default(self, field):
+        return self._handler[field] 
+
+
+    class Handler(xml.sax.ContentHandler):
+        
+        ROOT = "defaults"
+
+        def __init__(self):
+            self._values = {}
+            self._node_stack = []
+            self._curr_node = None
+            self._curr_content = ''
+
+        def startElement(self, tag, attrs):
+            if self._curr_node:
+                self._node_stack.insert(0, (self._curr_node,self._curr_content) )
+            self._curr_node = tag
+            self._curr_content = ''
+
+        def endElement(self, tag):
+            if tag.lower() != self.ROOT:
+                self._values[self._curr_node.lower()] = self._curr_content
+            self._curr_node, self._curr_content = self._node_stack.pop() \
+                if len(self._node_stack) else (None, '')
+        
+        def characters(self, content):
+            self._curr_content += content
+        
+        def __getitem__(self, key):
+            key = key.lower()
+            return self._values[key] if key in self._values else None
+
