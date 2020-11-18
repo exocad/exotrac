@@ -121,7 +121,9 @@ function selectedComponentChanged(e) {
 	
 	var currentSelector = jQuery(this);
 	for (var i = level; i < gMaxBranches; i++) {
-		var items = getLeafsForLevel(i, prefix, e.data.forceEmptyLeafs);
+		var items = getLeafsForLevel(i, prefix, e.data.forceEmptyLeafs).sort(function (a, b) {
+			    return a.toLowerCase().localeCompare(b.toLowerCase());
+		});
 
 		for (j = 0; j < items.length; j++)
 			currentSelector.next().append(jQuery("<option/>", {

@@ -1,0 +1,10 @@
+setup.py
+TracSubcomponents.egg-info/PKG-INFO
+TracSubcomponents.egg-info/SOURCES.txt
+TracSubcomponents.egg-info/dependency_links.txt
+TracSubcomponents.egg-info/entry_points.txt
+TracSubcomponents.egg-info/requires.txt
+TracSubcomponents.egg-info/top_level.txt
+subcomponents/__init__.py
+subcomponents/web_ui.py
+subcomponents/htdocs/componentselect.js

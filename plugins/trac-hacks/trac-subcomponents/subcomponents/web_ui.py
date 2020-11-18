@@ -16,6 +16,8 @@ from trac.web.chrome import ITemplateProvider, ITemplateStreamFilter, add_notice
 from trac.ticket.roadmap import TicketGroupStats
 from trac.util.translation import _
 
+from sys import stdout
+
 class SubComponentsModule(Component):
     """Implements subcomponents in Trac's interface."""
     
