@@ -121,6 +121,8 @@ function selectedComponentChanged(e) {
 	
 	var currentSelector = jQuery(this);
 	for (var i = level; i < gMaxBranches; i++) {
+		// Note that items list is sorted alphabetically (case insensitive)
+		// before we use it in the next step.
 		var items = getLeafsForLevel(i, prefix, e.data.forceEmptyLeafs).sort(function (a, b) {
 			    return a.toLowerCase().localeCompare(b.toLowerCase());
 		});
