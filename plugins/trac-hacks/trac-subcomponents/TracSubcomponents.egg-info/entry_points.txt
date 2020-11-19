@@ -1,3 +1,0 @@
-[trac.plugins]
-subcomponents.web_ui = subcomponents.web_ui
-
