@@ -121,7 +121,7 @@ function selectedComponentChanged(e) {
 	
 	var currentSelector = jQuery(this);
 	for (var i = level; i < gMaxBranches; i++) {
-		// Note that items list is sorted alphabetically (case insensitive)
+		// Note that the items list is sorted alphabetically (case insensitive)
 		// before we use it in the next step.
 		var items = getLeafsForLevel(i, prefix, e.data.forceEmptyLeafs).sort(function (a, b) {
 			    return a.toLowerCase().localeCompare(b.toLowerCase());
@@ -132,7 +132,7 @@ function selectedComponentChanged(e) {
 				value: items[j],
 				text: items[j]
 			}));
-		
+
 		// If there are any entries in the select to the right, show it
 		// otherwise break out of the loop as we are done
 		if (items.length)
@@ -207,7 +207,9 @@ function convertComponentSelect(element, forceEmptyLeafs)
 	// Note: always use currentItems.length + 1 because we want to check
 	// whether there are more subselections possible
 	for (var i = 0; i < currentItems.length + 1; i++) {		
-		var items = getLeafsForLevel(i, prefix, forceEmptyLeafs);
+		var items = getLeafsForLevel(i, prefix, e.data.forceEmptyLeafs).sort(function (a, b) {
+			    return a.toLowerCase().localeCompare(b.toLowerCase());
+		});
 
 		for (j = 0; j < items.length; j++) {
 			jQuery(currentSelectors[i]).append(jQuery("<option/>", {
